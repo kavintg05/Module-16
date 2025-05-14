@@ -38,124 +38,172 @@ To write a Python function `def insert(self, key, value):` to insert elements in
 #Reg.NO-212223060119
 #Name-Kavindra T G
 ENTER YOUR CODE
-class BPlusTreeNode:
-    def __init__(self, is_leaf=False):
-        self.is_leaf = is_leaf
+class Node(object):
+    
+    def __init__(self, order):
+        
+        self.order = order
         self.keys = []
-        self.children = []
-        self.parent = None
-        self.next = None  
-        self.values = [] if is_leaf else None
+        self.values = []
+        self.leaf = True
 
-class BPlusTree:
-    def __init__(self, degree):
-        self.root = BPlusTreeNode(is_leaf=True)
-        self.degree = degree
+    def add(self, key, value):
+        
+        if not self.keys:
+            self.keys.append(key)
+            self.values.append([value])
+            return None
 
-    def find_leaf(self, key):
-        node = self.root
-        while not node.is_leaf:
-            i = 0
-            while i < len(node.keys) and key >= node.keys[i]:
-                i += 1
-            node = node.children[i]
-        return node
+        for i, item in enumerate(self.keys):
+            
+            if key == item:
+                self.values[i].append(value)
+                break
+
+            
+            elif key < item:
+                self.keys = self.keys[:i] + [key] + self.keys[i:]
+                self.values = self.values[:i] + [[value]] + self.values[i:]
+                break
+
+        
+            elif i + 1 == len(self.keys):
+                self.keys.append(key)
+                self.values.append([value])
+
+    def split(self):
+        
+        left = Node(self.order)
+        right = Node(self.order)
+        mid = self.order // 2
+
+        left.keys = self.keys[:mid]
+        left.values = self.values[:mid]
+
+        right.keys = self.keys[mid:]
+        right.values = self.values[mid:]
+
+      
+        self.keys = [right.keys[0]]
+        self.values = [left, right]
+        self.leaf = False
+
+    def is_full(self):
+     
+        return len(self.keys) == self.order
+
+    def show(self, counter=0):
+        
+        print(counter, str(self.keys))
+
+        
+        if not self.leaf:
+            for item in self.values:
+                item.show(counter + 1)
+
+class BPlusTree(object):
+    
+    def __init__(self, order=8):
+        self.root = Node(order)
+
+    def _find(self, node, key):
+        
+        for i, item in enumerate(node.keys):
+            if key < item:
+                return node.values[i], i
+
+        return node.values[i + 1], i + 1
+
+    def _merge(self, parent, child, index):
+        
+        parent.values.pop(index)
+        pivot = child.keys[0]
+
+        for i, item in enumerate(parent.keys):
+            if pivot < item:
+                parent.keys = parent.keys[:i] + [pivot] + parent.keys[i:]
+                parent.values = parent.values[:i] + child.values + parent.values[i:]
+                break
+
+            elif i + 1 == len(parent.keys):
+                parent.keys += [pivot]
+                parent.values += child.values
+                break
 
     def insert(self, key, value):
-        leaf = self.find_leaf(key)
-        i = 0
-        while i < len(leaf.keys) and key > leaf.keys[i]:
-            i += 1
-        leaf.keys.insert(i, key)
-        leaf.values.insert(i, value)
-        if len(leaf.keys) >= self.degree:
-            self.split_leaf(leaf)
+        
+        # Write your code here
+        parent=None
+        child=self.root
+        while not child.leaf:
+            parent=child
+            child,index=self._find(child, key)
+        child.add(key, value)
+        if child.is_full():
+            child.split()
+            
+            if parent and not parent.is_full():
+                self._merge(parent,child,index)
+    
 
-    def split_leaf(self, leaf):
-        new_leaf = BPlusTreeNode(is_leaf=True)
-        mid = len(leaf.keys) // 2
-        new_leaf.keys = leaf.keys[mid:]
-        new_leaf.values = leaf.values[mid:]
-        leaf.keys = leaf.keys[:mid]
-        leaf.values = leaf.values[:mid]
+    def retrieve(self, key):
+       
+        child = self.root
 
-        new_leaf.next = leaf.next
-        leaf.next = new_leaf
-        new_leaf.parent = leaf.parent
+        while not child.leaf:
+            child, index = self._find(child, key)
 
-        if leaf.parent is None:
-            new_root = BPlusTreeNode(is_leaf=False)
-            new_root.keys = [new_leaf.keys[0]]
-            new_root.children = [leaf, new_leaf]
-            leaf.parent = new_root
-            new_leaf.parent = new_root
-            self.root = new_root
-        else:
-            self.insert_into_parent(leaf, new_leaf.keys[0], new_leaf)
+        for i, item in enumerate(child.keys):
+            if key == item:
+                return child.values[i]
 
-    def insert_into_parent(self, left, key, right):
-        parent = left.parent
-        insert_pos = parent.children.index(left)
-        parent.keys.insert(insert_pos, key)
-        parent.children.insert(insert_pos + 1, right)
-        right.parent = parent
+        return None
 
-        if len(parent.keys) >= self.degree:
-            self.split_internal(parent)
+    def show(self):
+        
+        self.root.show()
 
-    def split_internal(self, node):
-        new_internal = BPlusTreeNode(is_leaf=False)
-        mid = len(node.keys) // 2
-        promote_key = node.keys[mid]
+def demo_node():
+    node = Node(order=4)
+    node.add('a', 'alpha')
+    node.add('b', 'bravo')
+    node.add('c', 'charlie')
+    node.add('d', 'delta')
+    node.show()
 
-        new_internal.keys = node.keys[mid + 1:]
-        new_internal.children = node.children[mid + 1:]
-        for child in new_internal.children:
-            child.parent = new_internal
+    print('\nSplitting node...')
+    node.split()
+    node.show()
 
-        node.keys = node.keys[:mid]
-        node.children = node.children[:mid + 1]
+def demo_bplustree():
+    print('B+ tree...')
+    bplustree = BPlusTree(order=4)
+    x=input()
+    y=input()
+    bplustree.insert('a', 'alpha')
+    bplustree.insert('b', 'bravo')
+    bplustree.insert('c', 'charlie')
+    bplustree.insert('d', 'delta')
+    bplustree.insert('e', 'echo')
+    #bplustree.insert('f', 'foxtrot')
+    bplustree.insert(x,y)
+    #write your code here
+    
+    
+    bplustree.show()
 
-        if node.parent is None:
-            new_root = BPlusTreeNode(is_leaf=False)
-            new_root.keys = [promote_key]
-            new_root.children = [node, new_internal]
-            node.parent = new_root
-            new_internal.parent = new_root
-            self.root = new_root
-        else:
-            self.insert_into_parent(node, promote_key, new_internal)
+    
 
-    def print_leaves(self):
-        node = self.root
-        while not node.is_leaf:
-            node = node.children[0]
-        print("Leaf level:")
-        while node:
-            for key, val in zip(node.keys, node.values):
-                print(f"{key}:{val}", end=" | ")
-            node = node.next
-        print("\n")
-
-
-bpt = BPlusTree(degree=4)
-
-bpt.insert(10, "A")
-bpt.insert(20, "B")
-bpt.insert(5, "C")
-bpt.insert(6, "D")
-bpt.insert(12, "E")
-bpt.insert(30, "F")
-bpt.insert(7, "G")
-bpt.insert(17, "H")
-
-bpt.print_leaves()
-
+if __name__ == '__main__':
+    demo_node()
+    print('\n')
+    demo_bplustree()
 ```
 
 ## OUTPUT
 
-![image](https://github.com/user-attachments/assets/846a7f8f-47cd-4a4b-8853-4506276e0837)
+![image](https://github.com/user-attachments/assets/c662aa27-5da9-4889-ac64-0e0bb9788e65)
+
 
 
 ## RESULT
