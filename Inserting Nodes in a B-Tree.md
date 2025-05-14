@@ -34,79 +34,95 @@ To write a Python function `def insert(self, k):` to insert the nodes in a **B-T
 ## PYTHON PROGRAM
 
 ```
-#Reg.NO-212223060119
-#Name-Kavindra T G
-ENTER YOUR CODE
-
+# Create a node
 class BTreeNode:
-    def __init__(self, t, is_leaf):
-        self.t = t
-        self.keys = []
-        self.children = []
-        self.is_leaf = is_leaf
+  def __init__(self, leaf=False):
+    self.leaf = leaf
+    self.keys = []
+    self.child = []
 
+
+# Tree
 class BTree:
-    def __init__(self, t):
-        self.root = BTreeNode(t, True)
-        self.t = t
+  def __init__(self, t):
+    self.root = BTreeNode(True)
+    self.t = t
 
-    def insert(self, k):
-        root = self.root
-        if len(root.keys) == (2 * self.t) - 1:
-            new_node = BTreeNode(self.t, False)
-            new_node.children.insert(0, root)
-            self.split_child(new_node, 0)
-            self.insert_non_full(new_node, k)
-            self.root = new_node
-        else:
-            self.insert_non_full(root, k)
+    # Insert node
+  def insert(self, k):
+      #Write your code here
+    root = self.root
+    if len(root.keys) == (2 * self.t) - 1:
+      temp = BTreeNode()
+      self.root = temp
+      temp.child.insert(0, root)
+      self.split_child(temp, 0)
+      self.insert_non_full(temp, k)
+    else:
+      self.insert_non_full(root, k)
 
-    def insert_non_full(self, node, k):
-        i = len(node.keys) - 1
-        if node.is_leaf:
-            node.keys.append(None)
-            while i >= 0 and k < node.keys[i]:
-                node.keys[i + 1] = node.keys[i]
-                i -= 1
-            node.keys[i + 1] = k
-        else:
-            while i >= 0 and k < node.keys[i]:
-                i -= 1
-            i += 1
-            if len(node.children[i].keys) == (2 * self.t) - 1:
-                self.split_child(node, i)
-                if k > node.keys[i]:
-                    i += 1
-            self.insert_non_full(node.children[i], k)
+    # Insert nonfull
+  def insert_non_full(self, x, k):
+    i = len(x.keys) - 1
+    if x.leaf:
+      x.keys.append((None, None))
+      while i >= 0 and k[0] < x.keys[i][0]:
+        x.keys[i + 1] = x.keys[i]
+        i -= 1
+      x.keys[i + 1] = k
+    else:
+      while i >= 0 and k[0] < x.keys[i][0]:
+        i -= 1
+      i += 1
+      if len(x.child[i].keys) == (2 * self.t) - 1:
+        self.split_child(x, i)
+        if k[0] > x.keys[i][0]:
+          i += 1
+      self.insert_non_full(x.child[i], k)
 
-    def split_child(self, parent, i):
-        t = self.t
-        y = parent.children[i]
-        z = BTreeNode(t, y.is_leaf)
-        parent.children.insert(i + 1, z)
-        parent.keys.insert(i, y.keys[t - 1])
-        z.keys = y.keys[t:(2 * t) - 1]
-        y.keys = y.keys[0:t - 1]
-        if not y.is_leaf:
-            z.children = y.children[t:(2 * t)]
-            y.children = y.children[0:t]
+    # Split the child
+  def split_child(self, x, i):
+    t = self.t
+    y = x.child[i]
+    z = BTreeNode(y.leaf)
+    x.child.insert(i + 1, z)
+    x.keys.insert(i, y.keys[t - 1])
+    z.keys = y.keys[t: (2 * t) - 1]
+    y.keys = y.keys[0: t - 1]
+    if not y.leaf:
+      z.child = y.child[t: 2 * t]
+      y.child = y.child[0: t - 1]
 
-    def print_tree(self, node=None, level=0):
-        if node is None:
-            node = self.root
-        print("Level", level, "Keys:", node.keys)
-        if not node.is_leaf:
-            for child in node.children:
-                self.print_tree(child, level + 1)
-b_tree = BTree(t=3)
-for key in [10, 20, 5, 6, 12, 30, 7, 17]:
-    b_tree.insert(key)
-b_tree.print_tree()
+  # Print the tree
+  def print_tree(self, x, l=0):
+    print("Level ", l, " ", len(x.keys), end=":")
+    for i in x.keys:
+      print(i, end=" ")
+    print()
+    l += 1
+    if len(x.child) > 0:
+      for i in x.child:
+        self.print_tree(i, l)
 
+  
+
+B = BTree(3)
+
+for i in range(10):
+    B.insert((i, 2 * i))
+print("B Tree :")
+B.print_tree(B.root)
+n=int(input())
+B.insert((n,))
+#Write your code here
+
+print("\nB Tree after insertion")
+B.print_tree(B.root)
 ```
 
 ## OUTPUT
-![image](https://github.com/user-attachments/assets/6112635d-c263-4d7d-9bc6-30223c5f7ff9)
+![image](https://github.com/user-attachments/assets/27a79283-8ecd-4f4b-a26a-c000283c88e8)
+
 
 
 ## RESULT
